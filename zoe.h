@@ -4,7 +4,7 @@ typedef enum {free,p1,p2,gutter,wall,prohibited} CASE;
 typedef enum {left,right,up_left,up_right,down_left,down_right} DEPLACEMENT;
 typedef enum {player1,player2} TURN;
 typedef enum {impossible,line,DL,DR} POSSIBLE;
-typedef enum {marguerite, domination, face_a_face} POSITION_DEP;
+typedef enum {standard,daisy,domination,face_to_face,snake,alliance,labyrinth,random} START_POSITION;
 typedef struct {int x,y;} COORD;
 
 //Tableau vide
@@ -47,7 +47,7 @@ CASE T_domination[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 						   {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
 				  
 //Entrée face à face
-CASE T_face_a_face[11][21]=  {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
+CASE T_face_to_face[11][21]=  {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 							  {5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
 							  {5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5},
 							  {5,5,3,5,2,5,2,5,0,5,0,5,0,5,1,5,1,5,3,5,5},
@@ -60,7 +60,7 @@ CASE T_face_a_face[11][21]=  {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 							  {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
 				  
 //Entrée Marguerite
-CASE T_marguerite[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
+CASE T_daisy[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 						   {5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
 						   {5,5,5,3,5,2,5,2,5,0,5,0,5,1,5,1,5,3,5,5,5},
 						   {5,5,3,5,2,5,1,5,2,5,0,5,1,5,2,5,1,5,3,5,5},
@@ -83,8 +83,8 @@ CASE T_snake[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				  {5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,2,5,3,5,5,5},
 				  {5,5,5,5,3,5,2,5,2,5,2,5,2,5,2,5,3,5,5,5,5},
 				  {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
-//Entrée Alliances
-CASE T_alliances[11][21]= 	 {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
+//Entrée Alliance
+CASE T_alliance[11][21]= 	 {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				  {5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
 				  {5,5,5,3,5,0,5,2,5,2,5,1,5,1,5,0,5,3,5,5,5},
 				  {5,5,3,5,0,5,2,5,0,5,2,5,1,5,1,5,0,5,3,5,5},
@@ -97,7 +97,7 @@ CASE T_alliances[11][21]= 	 {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				  {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
 
 //Entrée Labyrinthe
-CASE T_labyrinthe[11][22]=       {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
+CASE T_labyrinth[11][22]=       {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				  {5,5,5,5,3,5,0,5,0,5,1,5,2,5,1,5,3,5,5,5,5},
 				  {5,5,5,3,5,0,5,2,5,0,5,0,5,0,5,1,5,3,5,5,5},
 				  {5,5,3,5,0,5,2,5,1,5,2,5,0,5,0,5,1,5,3,5,5},
@@ -109,25 +109,37 @@ CASE T_labyrinthe[11][22]=       {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				  {5,5,5,5,3,5,2,5,1,5,2,5,0,5,0,5,3,5,5,5,5},
 				  {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
 						    
-void copy_tab(CASE T[11][21], CASE T_variante[11][21])
+void copy_tab(CASE T[11][21], CASE T_variant[11][21])
 {
 	int l,c;
 	for (l=0;l<11;l++)
 	{
 		for (c=0;c<21;c++)
 		{
-			T[l][c]=T_variante[l][c];
+			T[l][c]=T_variant[l][c];
 		}
 	}
 }
 	
-void init_tab(POSITION_DEP pos)
+void init_tab(START_POSITION _pos)
 {
 	switch (pos)
 	{
-		case marguerite: copy_tab(T,T_marguerite);
+		case standard: copy_tab(T,T_standard);
+						 break;
+		case daisy: copy_tab(T,T_daisy);
 						 break;
 		case domination: copy_tab(T,T_domination);
+						 break;
+		case face_to_face: copy_tab(T,T_face_to_face);
+						 break;
+		case snake: copy_tab(T,T_snake);
+						 break;
+		case alliance: copy_tab(T,T_alliance);
+						 break;
+		case labyrinth: copy_tab(T,T_labyrinth);
+						 break;
+		case random: copy_tab(T,T_random);
 						 break;
 		default: break;			 
 	}
