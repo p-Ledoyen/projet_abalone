@@ -1,0 +1,463 @@
+#include <stdio.h>
+#include <math.h>
+
+typedef enum {False, True} BOOL;
+typedef enum {free,pion1,pion2,gutter,wall,prohibited} CASE;
+typedef enum {left,right,up_left,up_right,down_left,down_right} DEPLACEMENT;
+typedef enum {player1,player2} TURN;
+typedef enum {impossible, line, DL, DR} POSSIBLE; //DL : diagonal left , DR : diagonal right ( on regarde toujours de haut en bas. )
+typedef struct {int x,y;} COORD;
+
+
+void move_possible_1( COORD p1, DEPLACEMENT dep);
+POSSIBLE move_possible_left_1( COORD p1);
+POSSIBLE move_possible_right_1( COORD p1);
+POSSIBLE move_possible_up_left_1( COORD p1);
+POSSIBLE move_possible_up_right_1( COORD p1);
+POSSIBLE move_possible_down_left_1( COORD p1);
+POSSIBLE move_possible_down_right_1( COORD p1);
+void move_possible_2( COORD p1, COORD p2, DEPLACEMENT dep);
+POSSIBLE move_possible_left_2( COORD p1, COORD p2);
+POSSIBLE move_possible_right_2( COORD p1, COORD p2);
+POSSIBLE move_possible_up_left_2( COORD p1, COORD p2);
+POSSIBLE move_possible_up_right_2( COORD p1, COORD p2);
+POSSIBLE move_possible_down_left_2( COORD p1, COORD p2);
+POSSIBLE move_possible_down_right_2( COORD p1, COORD p2);
+void move_possible_3( COORD p1, COORD p2, COORD p3, DEPLACEMENT dep);
+POSSIBLE move_possible_left_3( COORD p1, COORD p2, COORD p3);
+POSSIBLE move_possible_right_3( COORD p1, COORD p2, COORD p3);
+POSSIBLE move_possible_up_left_3( COORD p1, COORD p2, COORD p3);
+POSSIBLE move_possible_up_right_3( COORD p1, COORD p2, COORD p3);
+POSSIBLE move_possible_down_left_3( COORD p1, COORD p2, COORD p3);
+POSSIBLE move_possible_down_right_3( COORD p1, COORD p2, COORD p3);
+
+//Entrée standard
+CASE T[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
+				{5,5,5,5,3,5,2,5,2,5,2,5,2,5,2,5,3,5,5,5,5},
+				{5,5,5,3,5,2,5,2,5,2,5,2,5,2,5,2,5,3,5,5,5},
+				{5,5,3,5,0,5,0,5,2,5,2,5,2,5,0,5,0,5,3,5,5},
+				{5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5},
+				{3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3},
+				{5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5},
+				{5,5,3,5,0,5,0,5,1,5,1,5,1,5,0,5,0,5,3,5,5},
+				{5,5,5,3,5,1,5,1,5,1,5,1,5,1,5,1,5,3,5,5,5},
+				{5,5,5,5,3,5,1,5,1,5,1,5,1,5,1,5,3,5,5,5,5},
+				{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
+				
+TURN player=player1;
+
+
+//Cas 1 pion.
+void move_possible_1( COORD p1, DEPLACEMENT dep)
+{
+	int V;
+	V = verif_pion_choisi_1( p1);
+	//Si l'entier T est à 0, alors tous les pions sélectionnés appartiennent au bon joueur, on peut donc vérifier si le déplacement est autorisé.
+	if (V==0)
+	{
+		switch(dep)
+		{
+			case left : move_possible_left_1( p1); 
+				break;
+			case right : move_possible_right_1( p1); 
+				break;
+			case up_left : move_possible_up_left_1( p1); 	
+				break;
+			case up_right : move_possible_up_right_1( p1); 
+				break;
+			case down_left : move_possible_down_left_1( p1); 
+				break;
+			case down_right : move_possible_down_right_1( p1); 
+				break;
+			default : break;
+		}
+	}
+}
+
+int verif_pion_choisi_1( COORD p1)
+{
+	if ( (player==player1) && (T[p1.x][p1.y]==pion1) ) return 0;
+	else if ((player==player2) && (T[p1.x][p1.y]==pion2)  ) return 0;
+	else return 1;
+}
+
+POSSIBLE move_possible_left_1( COORD p1)
+{
+	if (T[p1.x][p1.y-2]==free) return line;
+	else return impossible;
+}
+
+POSSIBLE move_possible_right_1( COORD p1)
+{
+	if (T[p1.x][p1.y+2]==free) return line;
+	else return impossible;
+}
+
+POSSIBLE move_possible_up_left_1( COORD p1)
+{
+	if (T[p1.x-1][p1.y-1]==free) return line;
+	else return impossible;
+}
+
+POSSIBLE move_possible_up_right_1( COORD p1)
+{
+	if (T[p1.x-1][p1.y+1]==free) return line;
+	else return impossible;
+}
+
+POSSIBLE move_possible_down_left_1( COORD p1)
+{
+	if (T[p1.x+1][p1.y-1]==free) return line;
+	else return impossible;
+}
+
+POSSIBLE move_possible_down_right_1( COORD p1)
+{
+	if (T[p1.x+1][p1.y+1]==free) return line;
+	else return impossible;
+}
+
+//Cas 2 pions. (On considère que p1 n'est pas forcément le premier pion sur lequel on clique, à modifier dans le futur potentiellement).
+void move_possible_2( COORD p1, COORD p2, DEPLACEMENT dep)
+{
+	int V;
+	V = verif_pion_choisi_2( p1, p2);
+	//Si l'entier T est à 0, alors tous les pions sélectionnés appartiennent au bon joueur, on peut donc vérifier si le déplacement est autorisé.
+	if (V==0)
+	{
+		switch(dep)
+		{
+			case left : move_possible_left_2( p1, p2); 
+				break;
+			case right : move_possible_right_2( p1, p2); 
+				break;
+			case up_left : move_possible_up_left_2( p1, p2); 	
+				break;
+			case up_right : move_possible_up_right_2( p1, p2); 
+				break;
+			case down_left : move_possible_down_left_2( p1, p2); 
+				break;
+			case down_right : move_possible_down_right_2( p1, p2); 
+				break;
+			default : break;
+		}
+	}
+}
+
+int verif_pion_choisi_2( COORD p1, COORD p2)
+{
+	if ( (player==player1) && (T[p1.x][p1.y]==pion1) && (T[p2.x][p2.y]==pion1)  ) return 0;
+	else if ((player==player2) && (T[p1.x][p1.y]==pion2) && (T[p2.x][p2.y]==pion2)  ) return 0;
+	else return 1;
+}
+
+POSSIBLE move_possible_left_2( COORD p1, COORD p2)
+{
+	if (p1.x==p2.x) //Les pions sont sur la même lignes, on verrifie donc s'il y a un sumito ou si la case à gauche est vide.
+	{
+		if (p1.y>p2.y) 
+		{
+			if ((T[p1.x][p2.y-2]==free) || ((((player==player1) && (T[p1.x][p2.y-2]==pion2))||((player==player2) && (T[p1.x][p2.y-2]==pion1))) && ((T[p1.x][p2.y-4]==free) || (T[p1.x][p2.y-4]==gutter)))) return line;
+			else return impossible;
+		}
+		else
+		{
+			if ((T[p1.x][p1.y-2]==free) || ((((player==player1) && (T[p1.x][p1.y-2]==pion2))||((player==player2) && (T[p1.x][p1.y-2]==pion1))) && ((T[p1.x][p1.y-4]==free) || (T[p1.x][p1.y-4]==gutter)))) return line;
+			else return impossible;
+		}
+	}
+	else if (((p1.x==p2.x-1) && (p1.y==p2.y+1)) || ((p1.x==p2.x+1) && (p1.y==p2.y-1))) //Les pions sont en diagonales gauches, on verrifie donc que les 2 cases à gauche sont vides.
+	{
+		if ((T[p1.x][p1.y-2]==free) && (T[p2.x][p2.y-2]==free)) return DL;
+		else return impossible;
+	}
+	else if (((p1.x==p2.x+1) && (p1.y==p2.y+1)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1))) //Les pions sont en diagonales droites, on verrifie donc que les 2 cases à gauche sont vides.
+	{
+		if ((T[p1.x][p1.y-2]==free) && (T[p2.x][p2.y-2]==free)) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_right_2( COORD p1, COORD p2)
+{
+	if (p1.x==p2.x) //Les pions sont sur la même lignes, on verrifie donc s'il y a un sumito ou si la case à droite est vide.
+	{
+		if (p1.y>p2.y) 
+		{
+			if ((T[p1.x][p1.y+2]==free) || ((((player==player1) && (T[p1.x][p1.y+2]==pion2))||((player==player2) && (T[p1.x][p2.y-2]==pion1))) && ((T[p1.x][p1.y+4]==free) || (T[p1.x][p1.y+4]==gutter)))) return line;
+			else return impossible;
+		}
+		else
+		{
+			if ((T[p1.x][p2.y+2]==free) || ((((player==player1) && (T[p1.x][p2.y+2]==pion2))||((player==player2) && (T[p1.x][p1.y-2]==pion1))) && ((T[p1.x][p2.y+4]==free) || (T[p1.x][p2.y+4]==gutter)))) return line;
+			else return impossible;
+		}
+	}
+	else if (((p1.x==p2.x-1) && (p1.y==p2.y+1)) || ((p1.x==p2.x+1) && (p1.y==p2.y-1))) //Les pions sont en diagonales gauches, on verrifie donc que les 2 cases à droite sont vides.
+	{
+		if ((T[p1.x][p1.y+2]==free) && (T[p2.x][p2.y+2]==free)) return DL;
+		else return impossible;
+	}
+	else if (((p1.x==p2.x+1) && (p1.y==p2.y+1)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1))) //Les pions sont en diagonales droites, on verrifie donc que les 2 cases à droite sont vides.
+	{
+		if ((T[p1.x][p1.y+2]==free) && (T[p2.x][p2.y+2]==free)) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_up_left_2( COORD p1, COORD p2)
+{
+	if (p1.x==p2.x) //Les pions sont sur la même lignes, on verrifie donc que les 2 cases en haut à gauche sont vides.
+	{
+		if ((T[p1.x-1][p1.y-1]==free) && (T[p2.x-1][p2.y-1]==free)) return line;
+		else return impossible;
+	}
+	else if ( ((p1.x==p2.x-1) && (p1.y==p2.y+1)) || ((p1.x==p2.x+1) && (p1.y==p2.y-1)) ) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p1.x-1][p1.y-1]==free) && (T[p2.x-1][p2.y-1]==free)) return DL;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x+1) && (p1.y==p2.y+1)) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p2.x-1][p2.y-1]==free) || ((((player==player1) && (T[p2.x-1][p2.y-1]==pion2))||((player==player2) && (T[p2.x-1][p2.y-1]==pion1))) && ((T[p2.x-2][p2.y-2]==free) || (T[p2.x-2][p2.y-2]==gutter)))) return DR;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x-1) && (p1.y==p2.y-1)) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p1.x-1][p1.y-1]==free) || ((((player==player1) && (T[p1.x-1][p1.y-1]==pion2))||((player==player2) && (T[p1.x-1][p1.y-1]==pion1))) && ((T[p1.x-2][p1.y-2]==free) || (T[p1.x-2][p1.y-2]==gutter)))) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_up_right_2( COORD p1, COORD p2)
+{
+	if (p1.x==p2.x) //Les pions sont sur la même lignes, on verrifie donc que les 2 cases en haut à droite sont vides.
+	{
+		if ((T[p1.x-1][p1.y+1]==free) && (T[p2.x-1][p2.y+1]==free)) return line;
+		else return impossible;
+	}
+	else if ( ((p1.x==p2.x+1) && (p1.y==p2.y+1)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1)) ) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p1.x-1][p1.y+1]==free) && (T[p2.x-1][p2.y+1]==free)) return DR;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x-1) && (p1.y==p2.y+1)) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p1.x-1][p1.y+1]==free) || ((((player==player1) && (T[p1.x-1][p1.y+1]==pion2))||((player==player2) && (T[p1.x-1][p1.y+1]==pion1))) && ((T[p1.x-2][p1.y+2]==free) || (T[p1.x-2][p1.y+2]==gutter)))) return DL;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x+1) && (p1.y==p2.y-1)) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p2.x-1][p2.y+1]==free) || ((((player==player1) && (T[p2.x-1][p2.y+1]==pion2))||((player==player2) && (T[p2.x-1][p2.y+1]==pion1))) && ((T[p2.x-2][p2.y+2]==free) || (T[p2.x-2][p2.y+2]==gutter)))) return DL;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_down_left_2( COORD p1, COORD p2)
+{
+	if (p1.x==p2.x) //Les pions sont sur la même lignes, on verrifie donc que les 2 cases en bas à gauche sont vides.
+	{
+		if ((T[p1.x+1][p1.y-1]==free) && (T[p2.x+1][p2.y-1]==free)) return line;
+		else return impossible;
+	}
+	else if ( ((p1.x==p2.x+1) && (p1.y==p2.y+1)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1)) ) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p1.x+1][p1.y-1]==free) && (T[p2.x+1][p2.y-1]==free)) return DR;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x-1) && (p1.y==p2.y+1)) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p2.x+1][p2.y-1]==free) || ((((player==player1) && (T[p2.x+1][p2.y-1]==pion2))||((player==player2) && (T[p2.x+1][p2.y-1]==pion1))) && ((T[p2.x+2][p2.y-2]==free) || (T[p2.x+2][p2.y-2]==gutter)))) return DL;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x+1) && (p1.y==p2.y-1)) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p1.x+1][p1.y-1]==free) || ((((player==player1) && (T[p1.x+1][p1.y-1]==pion2))||((player==player2) && (T[p1.x+1][p1.y-1]==pion1))) && ((T[p1.x+2][p1.y-2]==free) || (T[p1.x+2][p1.y-2]==gutter)))) return DL;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_down_right_2( COORD p1, COORD p2)
+{
+	if (p1.x==p2.x) //Les pions sont sur la même lignes, on verrifie donc que les 2 cases en bas à droite sont vides.
+	{
+		if ((T[p1.x+1][p1.y+1]==free) && (T[p2.x+1][p2.y+1]==free)) return line;
+		else return impossible;
+	}
+	else if ( ((p1.x==p2.x-1) && (p1.y==p2.y+1)) || ((p1.x==p2.x+1) && (p1.y==p2.y-1)) ) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p1.x+1][p1.y+1]==free) && (T[p2.x+1][p2.y+1]==free)) return DL;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x+1) && (p1.y==p2.y+1)) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p1.x+1][p1.y+1]==free) || ((((player==player1) && (T[p1.x+1][p1.y+1]==pion2))||((player==player2) && (T[p1.x+1][p1.y+1]==pion1))) && ((T[p1.x+2][p1.y+2]==free) || (T[p1.x+2][p1.y+2]==gutter)))) return DR;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x-1) && (p1.y==p2.y-1)) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p2.x+1][p2.y+1]==free) || ((((player==player1) && (T[p2.x+1][p2.y+1]==pion2))||((player==player2) && (T[p2.x+1][p2.y+1]==pion1))) && ((T[p2.x+2][p2.y+2]==free) || (T[p2.x+2][p2.y+2]==gutter)))) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+
+//Cas 3 pions. (On considère que p1 est forcément le premier pion cliqué et p2 et p3 dans sa continuité directe).
+void move_possible_3( COORD p1, COORD p2, COORD p3, DEPLACEMENT dep)
+{
+	int V;
+	V = verif_pion_choisi_3( p1, p2, p3);
+	//Si l'entier T est à 0, alors tous les pions sélectionnés appartiennent au bon joueur, on peut donc vérifier si le déplacement est autorisé.
+	if (V==0)
+	{
+		switch(dep)
+		{
+			case left : move_possible_left_3( p1, p2, p3); 
+				break;
+			case right : move_possible_right_3( p1, p2, p3); 
+				break;
+			case up_left : move_possible_up_left_3( p1, p2, p3); 	
+				break;
+			case up_right : move_possible_up_right_3( p1, p2, p3); 
+				break;
+			case down_left : move_possible_down_left_3( p1, p2, p3); 
+				break;
+			case down_right : move_possible_down_right_3( p1, p2, p3); 
+				break;
+			default : break;
+		}
+	}
+}
+
+int verif_pion_choisi_3( COORD p1, COORD p2, COORD p3)
+{
+	if ( (player==player1) && (T[p1.x][p1.y]==1) && (T[p2.x][p2.y]==1) && (T[p3.x][p3.y]==1) ) return 0;
+	else if ((player==player2) && (T[p1.x][p1.y]==2) && (T[p2.x][p2.y]==2) && (T[p3.x][p3.y]==2) ) return 0;
+	else return 1;
+}
+
+POSSIBLE move_possible_left_3( COORD p1, COORD p2, COORD p3)
+{
+	if ((p1.x==p2.x) && (p1.x==p3.x)) //Les pions sont sur la même lignes, on verrifie donc s'il y a un sumito ou si la case à gauche est vide.
+	{
+		if ((T[p1.x][p3.y-2]==free) || ((((player==player1) && (T[p1.x][p3.y-2]==pion2))||((player==player2) && (T[p1.x][p3.y-2]==pion1))) && ((T[p1.x][p3.y-4]==free) || (T[p1.x][p3.y-4]==gutter))) || ((((player==player1) && (T[p1.x][p3.y-2]==pion2) && (T[p1.x][p3.y-4]==pion2))||((player==player2) && (T[p1.x][p3.y-2]==pion1) && (T[p1.x][p3.y-4]==pion1))) && ((T[p1.x][p3.y-6]==free) || (T[p1.x][p3.y-6]==gutter)))) return line;
+		else return impossible;
+	}
+	else if (((p1.x==p2.x-1) && (p1.y==p2.y+1)) || ((p1.x==p2.x+1) && (p1.y==p2.y-1))) //Les pions sont en diagonales gauches, on verrifie donc que les 3 cases à gauche sont vides.
+	{
+		if ((T[p1.x][p1.y-2]==free) && (T[p2.x][p2.y-2]==free) && (T[p3.x][p3.y-2]==free)) return DL;
+		else return impossible;
+	}
+	else if (((p1.x==p2.x+1) && (p1.y==p2.y+1)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1))) //Les pions sont en diagonales droites, on verrifie donc que les 3 cases à gauche sont vides.
+	{
+		if ((T[p1.x][p1.y-2]==free) && (T[p2.x][p2.y-2]==free) && (T[p3.x][p3.y-2]==free)) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_right_3( COORD p1, COORD p2, COORD p3)
+{
+	if ((p1.x==p2.x) && (p1.x==p3.x)) //Les pions sont sur la même lignes, on verrifie donc s'il y a un sumito ou si la case à gauche est vide.
+	{
+		if ((T[p1.x][p3.y+2]==free) || ((((player==player1) && (T[p1.x][p3.y+2]==pion2))||((player==player2) && (T[p1.x][p3.y+2]==pion1))) && ((T[p1.x][p3.y+4]==free) || (T[p1.x][p3.y+4]==gutter))) || ((((player==player1) && (T[p1.x][p3.y+2]==pion2) && (T[p1.x][p3.y+4]==pion2))||((player==player2) && (T[p1.x][p3.y+2]==pion1) && (T[p1.x][p3.y+4]==pion1))) && ((T[p1.x][p3.y+6]==free) || (T[p1.x][p3.y+6]==gutter)))) return line;
+		else return impossible;
+	}
+	else if (((p1.x==p2.x-1) && (p1.y==p2.y+1)) || ((p1.x==p2.x+1) && (p1.y==p2.y-1))) //Les pions sont en diagonales gauches, on verrifie donc que les 3 cases à gauche sont vides.
+	{
+		if ((T[p1.x][p1.y+2]==free) && (T[p2.x][p2.y+2]==free) && (T[p3.x][p3.y+2]==free)) return DL;
+		else return impossible;
+	}
+	else if (((p1.x==p2.x+1) && (p1.y==p2.y+1)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1))) //Les pions sont en diagonales droites, on verrifie donc que les 3 cases à gauche sont vides.
+	{
+		if ((T[p1.x][p1.y+2]==free) && (T[p2.x][p2.y+2]==free) && (T[p3.x][p3.y+2]==free)) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_up_left_3( COORD p1, COORD p2, COORD p3)
+{
+	if ((p1.x==p2.x) && (p1.x==p3.x)) //Les pions sont sur la même lignes, on verrifie donc que les 3 cases en haut à gauche sont vides.
+	{
+		if ((T[p1.x-1][p1.y-1]==free) && (T[p2.x-1][p2.y-1]==free) && (T[p3.x-1][p3.y-1]==free)) return line;
+		else return impossible;
+	}
+	else if (( (p1.x==p2.x-1) && (p1.y==p2.y+1) && (p1.x==p3.x-2) && (p1.y==p3.y+2) ) || ( (p1.x==p2.x+1) && (p1.y==p2.y-1) && (p1.x==p3.x+2) && (p1.y==p3.y-2) )) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p1.x-1][p1.y-1]==free) && (T[p2.x-1][p2.y-1]==free) && (T[p3.x-1][p3.y-1]==free)) return DL;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x+1) && (p1.y==p2.y+1) && (p1.x==p3.x+2) && (p1.y==p3.y+2)) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p3.x-1][p3.y-1]==free) || ((((player==player1) && (T[p3.x-1][p3.y-1]==pion2))||((player==player2) && (T[p3.x-1][p3.y-1]==pion1))) && ((T[p3.x-2][p3.y-2]==free) || (T[p3.x-2][p3.y-2]==gutter))) || ((((player==player1) && (T[p3.x-1][p3.y-1]==pion2) && (T[p3.x-2][p3.y-2]==pion2))||((player==player2) && (T[p3.x-1][p3.y-1]==pion1) && (T[p3.x-2][p3.y-2]==pion1))) && ((T[p3.x-3][p3.y-3]==free) || (T[p3.x-3][p3.y-3]==gutter)))) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_up_right_3( COORD p1, COORD p2, COORD p3)
+{
+	if ((p1.x==p2.x) && (p1.x==p3.x)) //Les pions sont sur la même lignes, on verrifie donc que les 3 cases en haut à droite sont vides.
+	{
+		if ((T[p1.x-1][p1.y+1]==free) && (T[p2.x-1][p2.y+1]==free) && (T[p3.x-1][p3.y+1]==free)) return line;
+		else return impossible;
+	}
+	else if ( ((p1.x==p2.x+1) && (p1.y==p2.y+1) && (p1.x==p3.x+2) && (p1.y==p3.y+2)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1) && (p1.x==p3.x-2) && (p1.y==p3.y-2)) ) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p1.x-1][p1.y+1]==free) && (T[p2.x-1][p2.y+1]==free) && (T[p3.x-1][p3.y+1]==free)) return DR;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x+1) && (p1.y==p2.y-1) && (p1.x==p3.x+2) && (p1.y==p3.y-2)) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p3.x-1][p3.y+1]==free) || ((((player==player1) && (T[p3.x-1][p3.y+1]==pion2))||((player==player2) && (T[p3.x-1][p3.y+1]==pion1))) && ((T[p3.x-2][p3.y+2]==free) || (T[p3.x-2][p3.y+2]==gutter))) || ((((player==player1) && (T[p3.x-1][p3.y+1]==pion2) && (T[p3.x-2][p3.y+2]==pion2))||((player==player2) && (T[p3.x-1][p3.y+1]==pion1) && (T[p3.x-2][p3.y+2]==pion1))) && ((T[p3.x-3][p3.y+3]==free) || (T[p3.x-3][p3.y+3]==gutter)))) return DL;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_down_left_3( COORD p1, COORD p2, COORD p3)
+{
+	if ((p1.x==p2.x) && (p1.x==p3.x)) //Les pions sont sur la même lignes, on verrifie donc que les 3 cases en bas à gauche sont vides.
+	{
+		if ((T[p1.x+1][p1.y-1]==free) && (T[p2.x+1][p2.y-1]==free) && (T[p3.x+1][p3.y-1]==free)) return line;
+		else return impossible;
+	}
+	else if ( ((p1.x==p2.x+1) && (p1.y==p2.y+1) && (p1.x==p3.x+2) && (p1.y==p3.y+2)) || ((p1.x==p2.x-1) && (p1.y==p2.y-1) && (p1.x==p3.x-2) && (p1.y==p3.y-2)) ) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p1.x+1][p1.y-1]==free) && (T[p2.x+1][p2.y-1]==free) && (T[p3.x+1][p3.y-1]==free)) return DR;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x-1) && (p1.y==p2.y+1) && (p1.x==p3.x-2) && (p1.y==p3.y+2)) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p3.x+1][p3.y-1]==free) || ((((player==player1) && (T[p3.x+1][p3.y-1]==pion2))||((player==player2) && (T[p3.x+1][p3.y-1]==pion1))) && ((T[p3.x+2][p3.y-2]==free) || (T[p3.x+2][p3.y-2]==gutter))) || ((((player==player1) && (T[p3.x+1][p3.y-1]==pion2) && (T[p3.x+2][p3.y-2]==pion2))||((player==player2) && (T[p3.x+1][p3.y-1]==pion1) && (T[p3.x+2][p3.y-2]==pion1))) && ((T[p3.x+3][p3.y-3]==free) || (T[p3.x+3][p3.y-3]==gutter)))) return DL;
+		else return impossible;
+	}
+	else return impossible;
+}
+
+POSSIBLE move_possible_down_right_3( COORD p1, COORD p2, COORD p3)
+{
+	if ((p1.x==p2.x) && (p1.x==p3.x)) //Les pions sont sur la même lignes, on verrifie donc que les 3 cases en haut à gauche sont vides.
+	{
+		if ((T[p1.x+1][p1.y+1]==free) && (T[p2.x+1][p2.y+1]==free) && (T[p3.x+1][p3.y+1]==free)) return line;
+		else return impossible;
+	}
+	else if (( (p1.x==p2.x-1) && (p1.y==p2.y+1) && (p1.x==p3.x-2) && (p1.y==p3.y+2) ) || ( (p1.x==p2.x+1) && (p1.y==p2.y-1) && (p1.x==p3.x+2) && (p1.y==p3.y-2) )) //Les pions sont en diagonales gauches ( de haut en bas ).
+	{
+		if ((T[p1.x+1][p1.y+1]==free) && (T[p2.x+1][p2.y+1]==free) && (T[p3.x+1][p3.y+1]==free)) return DL;
+		else return impossible;
+	}
+	else if ((p1.x==p2.x-1) && (p1.y==p2.y-1) && (p1.x==p3.x-2) && (p1.y==p3.y-2)) //Les pions sont en diagonales droites ( de haut en bas ).
+	{
+		if ((T[p3.x+1][p3.y+1]==free) || ((((player==player1) && (T[p3.x+1][p3.y+1]==pion2))||((player==player2) && (T[p3.x+1][p3.y+1]==pion1))) && ((T[p3.x+2][p3.y+2]==free) || (T[p3.x+2][p3.y+2]==gutter))) || ((((player==player1) && (T[p3.x+1][p3.y+1]==pion2) && (T[p3.x+2][p3.y+2]==pion2))||((player==player2) && (T[p3.x+1][p3.y+1]==pion1) && (T[p3.x+2][p3.y+2]==pion1))) && ((T[p3.x+3][p3.y+3]==free) || (T[p3.x+3][p3.y+3]==gutter)))) return DR;
+		else return impossible;
+	}
+	else return impossible;
+}
