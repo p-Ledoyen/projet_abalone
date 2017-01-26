@@ -4,8 +4,8 @@
 typedef enum {free,p1,p2,gutter,wall,prohibited} CASE;
 typedef enum {left,right,up_left,up_right,down_left,down_right} DEPLACEMENT;
 typedef enum {player1,player2} TURN;
+typedef enum {impossible,line,DL,DR} POSSIBLE;
 typedef struct {int x,y;} COORD;
-
 
 
 
@@ -38,17 +38,16 @@ typedef struct {int x,y;} COORD;
 //Entree test			
 CASE T[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				{5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
-				{5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5},
-				{5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5},
-				{5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5},
-				{3,5,0,5,0,5,0,5,0,5,1,5,1,5,0,5,0,5,0,5,3},
-				{5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5},
-				{5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5},
-				{5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5},
+				{5,5,5,3,5,0,5,0,5,0,5,0,5,1,5,0,5,3,5,5,5},
+				{5,5,3,5,0,5,0,5,0,5,0,5,1,5,0,5,0,5,3,5,5},
+				{5,3,5,0,5,0,5,2,5,0,5,0,5,0,5,0,5,0,5,3,5},
+				{3,5,0,5,0,5,0,5,2,5,0,5,0,5,0,5,0,5,0,5,3},
+				{5,3,5,0,5,0,5,0,5,2,5,0,5,0,5,0,5,0,5,3,5},
+				{5,5,3,5,0,5,0,5,0,5,1,5,0,5,0,5,0,5,3,5,5},
+				{5,5,5,3,5,0,5,0,5,0,5,1,5,0,5,0,5,3,5,5,5},
 				{5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
 				{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
 					
-		
 
 TURN player=player1;
 
@@ -63,7 +62,6 @@ void move_right_1 (COORD p1)
 {
 	T[p1.x][p1.y+2]=T[p1.x][p1.y];
 	T[p1.x][p1.y]=0;
-	//change_player(TURN player);
 }
 
 void move_up_left_1 (COORD p1)
@@ -91,35 +89,399 @@ void move_down_right_1 (COORD p1)
 }
 
 //Mouvement 2 pions
-void move_left_2 (COORD p1,COORD p2)
+//On suppose que les pions peuvent être selectionnés dans n'importe quel ordre
+void move_left_2 (COORD p1,COORD p2,POSSIBLE alignment)
 {
-	if (p2.y < p1.y)
+	int x,y;
+	if (alignment != line)
 	{
-		int x,y;
-		x=p1.x; 	y=p1.y;
-		p1.x=p2.x;  p1.y=p2.y;
-		p2.x=p1.x;  p2.y=p1.y;
+		T[p1.x][p1.y-2]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+		T[p2.x][p2.y-2]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
 	}
-	if (T[p1.x][p1.y-4] == gutter)
+	else
 	{
+		if (p2.y < p1.y)
+		{
+			x=p1.x; 	y=p1.y;
+			p1.x=p2.x;  p1.y=p2.y;
+			p2.x=x;     p2.y=y;
+		}
 		if (T[p1.x][p1.y-2] != free)
 		{
-			//score++;
+			if (T[p1.x][p1.y-4] == free)
+			{
+				T[p1.x][p1.y-4]=T[p1.x][p1.y-2];
+			}
+			else
+			{
+				//score++;
+			}
 		}
-		T[p1.x][p1.y-2]=T[p1.x][p1.y];
-		T[p1.x][p1.y]=T[p2.x][p2.y];
-		T[p2.x][p2.y]=0;
-	}
-	else 
-	{
-		T[p1.x][p1.y-4]=T[p1.x][p1.y-2];
-		T[p1.x][p1.y-2]=T[p1.x][p1.y];
-		T[p1.x][p1.y]=T[p2.x][p2.y];
-		T[p2.x][p2.y]=0;
+		T[p1.x][p1.y-2]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
 	}
 }
 
+void move_right_2 (COORD p1,COORD p2,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment != line)
+	{
+		T[p1.x][p1.y-2]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+		T[p2.x][p2.y-2]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}
+	else
+	{
+		if (p2.y < p1.y)
+		{
+			x=p1.x; 	y=p1.y;
+			p1.x=p2.x;  p1.y=p2.y;
+			p2.x=x;     p2.y=y;
+		}
+		if (T[p2.x][p2.y+2] != free)
+		{
+			if (T[p2.x][p2.y+4] == free)
+			{
+				T[p2.x][p2.y+4]=T[p2.x][p2.y+2];
+			}
+			else
+			{
+				//score++;
+			}
+		}
+		T[p2.x][p2.y+2]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
 
+void move_up_left_2 (COORD p1, COORD p2,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DL) //Cas où les pions sont sur la même ligne, ou deplacement simple (pas sumito)
+	{
+		T[p1.x-1][p1.y-1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+		T[p2.x-1][p2.y-1]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (p2.x < p1.x)
+		{
+			x=p1.x; 	y=p1.y;
+			p1.x=p2.x;  p1.y=p2.y;
+			p2.x=x;     p2.y=y;
+		}
+		if (T[p1.x-1][p1.y-1] != free)
+		{
+			if (T[p1.x-2][p1.y-2] == free)
+			{
+				T[p1.x-2][p1.y-2]=T[p1.x-1][p1.y-1];
+			}
+			else
+			{
+				//score++;
+			}
+		}
+		T[p1.x-1][p1.y-1]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}	
+}
+
+void move_up_right_2 (COORD p1, COORD p2,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DR) 
+	//Cas où on les pions se trouvent sur la même ligne, ou en diagonale (pas sumito)
+	{
+		T[p1.x-1][p1.y+1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+		T[p2.x-1][p2.y+1]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (p2.y < p1.y)
+		{
+			x=p1.x; 	y=p1.y;
+			p1.x=p2.x;  p1.y=p2.y;
+			p2.x=x;     p2.y=y;
+		}
+		if (T[p2.x-1][p2.y+1] != free)
+		{
+			if (T[p2.x-2][p2.y+2] == free)
+			{
+				T[p2.x-2][p2.y+2]=T[p2.x-1][p2.y+1];
+			}
+			else
+			{
+				//score++;
+			}
+		}
+		T[p2.x-1][p2.y+1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}	
+}
+
+void move_down_left_2 (COORD p1, COORD p2, POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DR) //Cas où on les pions se trouvent sur la même ligne,ou en diagonale (pas sumito)
+	{
+		T[p1.x+1][p1.y-1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+		T[p2.x+1][p2.y-1]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (p1.x < p2.x)
+		{
+			x=p1.x; 	y=p1.y;
+			p1.x=p2.x;  p1.y=p2.y;
+			p2.x=x;     p2.y=y;
+		}
+		if (T[p1.x+1][p1.y-1] != free)
+		{
+			if (T[p1.x+2][p1.y-2] == free)
+			{
+				T[p1.x+2][p1.y-2]=T[p1.x+1][p1.y-1];
+			}
+			else
+			{
+				//score++;
+			}
+		}
+		T[p1.x+1][p1.y-1]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}	
+}
+void move_down_right_2 (COORD p1, COORD p2,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DL) 
+	//Cas où on les pions se trouvent sur la même ligne, ou en diagonale (pas sumito)
+	{
+		T[p1.x+1][p1.y+1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+		T[p2.x+1][p2.y+1]=T[p2.x][p2.y];
+		T[p2.x][p2.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (p2.y < p1.y)
+		{
+			x=p1.x; 	y=p1.y;
+			p1.x=p2.x;  p1.y=p2.y;
+			p2.x=x;     p2.y=y;
+		}
+		if (T[p2.x+1][p2.y+1] != free)
+		{
+			if (T[p2.x+2][p2.y+2] == free)
+			{
+				T[p2.x+2][p2.y+2]=T[p2.x+1][p2.y+1];
+			}
+			else
+			{
+				//score++;
+			}
+		}
+		T[p2.x+1][p2.y+1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}	
+}
+
+//Mouvement 3 pions
+//On suppose que les points p1 sont dans l'ordre dans lequel on veut les déplacer
+void move_left_3 (COORD p1,COORD p2,COORD p3,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment != line)
+	{
+		T[p1.x][p1.y-2]=T[p1.x][p1.y];	T[p1.x][p1.y]=free;
+		T[p2.x][p2.y-2]=T[p2.x][p2.y];	T[p2.x][p2.y]=free;
+		T[p3.x][p3.y-2]=T[p3.x][p3.y];	T[p3.x][p3.y]=free;
+	}
+	else
+	{
+		if (T[p3.x][p3.y-2] != free)
+		{
+			if ((T[p3.x][p3.y-4] != free) && (T[p3.x][p3.y-6] == gutter))
+			{
+				//score++;
+			}
+			else if (T[p3.x][p3.y-4] == free)
+			{
+				T[p3.x][p3.y-4]=T[p3.x][p3.y-2];
+			}
+			else
+			{
+				T[p3.x][p3.y-6]=T[p3.x][p3.y-2];
+			}
+		}
+		T[p3.x][p3.y-2]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
+
+void move_right_3 (COORD p1,COORD p2,COORD p3,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment != line)
+	{
+		T[p1.x][p1.y+2]=T[p1.x][p1.y];	T[p1.x][p1.y]=free;
+		T[p2.x][p2.y+2]=T[p2.x][p2.y];	T[p2.x][p2.y]=free;
+		T[p3.x][p3.y+2]=T[p3.x][p3.y];	T[p3.x][p3.y]=free;
+	}
+	else
+	{
+		if (T[p3.x][p3.y+2] != free)
+		{
+			if ((T[p3.x][p3.y+4] != free) && (T[p3.x][p3.y+6] == gutter))
+			{
+				//score++;
+			}
+			else if (T[p3.x][p3.y+4] == free)
+			{
+				T[p3.x][p3.y+4]=T[p3.x][p3.y+2];
+			}
+			else
+			{
+				T[p3.x][p3.y+6]=T[p3.x][p3.y+2];
+			}
+		}
+		T[p3.x][p3.y+2]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
+
+void move_up_left_3 (COORD p1, COORD p2,COORD p3,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DL) //Cas où les pions sont sur la même ligne, ou deplacement simple (pas sumito)
+	{
+		T[p1.x-1][p1.y-1]=T[p1.x][p1.y];	T[p1.x][p1.y]=free;
+		T[p2.x-1][p2.y-1]=T[p2.x][p2.y];	T[p2.x][p2.y]=free;
+		T[p3.x-1][p3.y-1]=T[p3.x][p3.y];	T[p3.x][p3.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (T[p3.x-1][p3.y-1] != free)
+		{
+			if ((T[p3.x-2][p3.y-2] != free) && (T[p3.x-3][p3.y-3] == gutter))
+			{
+				//score++;
+			}
+			else if (T[p3.x-2][p3.y-2] == free)
+			{
+				T[p3.x-2][p3.y-2]=T[p3.x-1][p3.y-1];
+			}
+			else
+			{
+				T[p3.x-3][p3.y-3]=T[p3.x-1][p3.y-1];
+			}
+		}
+		T[p3.x-1][p3.y-1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
+
+void move_up_right_3 (COORD p1, COORD p2,COORD p3,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DR) //Cas où les pions sont sur la même ligne, ou deplacement simple (pas sumito)
+	{
+		T[p1.x-1][p1.y+1]=T[p1.x][p1.y];	T[p1.x][p1.y]=free;
+		T[p2.x-1][p2.y+1]=T[p2.x][p2.y];	T[p2.x][p2.y]=free;
+		T[p3.x-1][p3.y+1]=T[p3.x][p3.y];	T[p3.x][p3.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (T[p3.x-1][p3.y+1] != free)
+		{
+			if ((T[p3.x-2][p3.y+2] != free) && (T[p3.x-3][p3.y+3] == gutter))
+			{
+				//score++;
+			}
+			else if (T[p3.x-2][p3.y+2] == free)
+			{
+				T[p3.x-2][p3.y+2]=T[p3.x-1][p3.y+1];
+			}
+			else
+			{
+				T[p3.x-3][p3.y+3]=T[p3.x-1][p3.y+1];
+			}
+		}
+		T[p3.x-1][p3.y+1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
+
+void move_down_left_3 (COORD p1, COORD p2,COORD p3,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DR) //Cas où les pions sont sur la même ligne, ou deplacement simple (pas sumito)
+	{
+		T[p1.x+1][p1.y-1]=T[p1.x][p1.y];	T[p1.x][p1.y]=free;
+		T[p2.x+1][p2.y-1]=T[p2.x][p2.y];	T[p2.x][p2.y]=free;
+		T[p3.x+1][p3.y-1]=T[p3.x][p3.y];	T[p3.x][p3.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (T[p3.x+1][p3.y-1] != free)
+		{
+			if ((T[p3.x+2][p3.y-2] != free) && (T[p3.x+3][p3.y-3] == gutter))
+			{
+				//score++;
+			}
+			else if (T[p3.x+2][p3.y-2] == free)
+			{
+				T[p3.x+2][p3.y-2]=T[p3.x+1][p3.y-1];
+			}
+			else
+			{
+				T[p3.x+3][p3.y-3]=T[p3.x+1][p3.y-1];
+			}
+		}
+		T[p3.x+1][p3.y-1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
+
+void move_down_right_3 (COORD p1, COORD p2,COORD p3,POSSIBLE alignment)
+{
+	int x,y;
+	if (alignment==line || alignment==DL) //Cas où les pions sont sur la même ligne, ou deplacement simple (pas sumito)
+	{
+		T[p1.x+1][p1.y+1]=T[p1.x][p1.y];	T[p1.x][p1.y]=free;
+		T[p2.x+1][p2.y+1]=T[p2.x][p2.y];	T[p2.x][p2.y]=free;
+		T[p3.x+1][p3.y+1]=T[p3.x][p3.y];	T[p3.x][p3.y]=free;
+	}
+	else //Cas diagonales (possible sumito)
+	{
+		if (T[p3.x+1][p3.y+1] != free)
+		{
+			if ((T[p3.x+2][p3.y+2] != free) && (T[p3.x+3][p3.y+3] == gutter))
+			{
+				//score++;
+			}
+			else if (T[p3.x+2][p3.y+2] == free)
+			{
+				T[p3.x+2][p3.y+2]=T[p3.x+1][p3.y+1];
+			}
+			else
+			{
+				T[p3.x+3][p3.y+3]=T[p3.x+1][p3.y+1];
+			}
+		}
+		T[p3.x+1][p3.y+1]=T[p1.x][p1.y];
+		T[p1.x][p1.y]=free;
+	}
+}
 
 
 void affiche()
@@ -141,11 +503,12 @@ void affiche()
 
 int main ()
 {
-	COORD p1,p2;
-	p1.x=5; p1.y=10;
-	p2.x=5; p2.y=12; 
+	COORD p1,p2,p3;
+	p3.x=6; p3.y=9;
+	p2.x=5; p2.y=8; 
+	p1.x=4; p1.y=7;
 	affiche();
-	move_left_2(p1,p2);
+	move_down_right_3(p1,p2,p3,DR);
 	affiche();
 	return 0;	
 }
