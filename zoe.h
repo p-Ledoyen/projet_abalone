@@ -108,40 +108,18 @@ CASE T_labyrinth[11][22]=       {{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
 				  {5,5,5,3,5,2,5,0,5,0,5,0,5,1,5,0,5,3,5,5,5},
 				  {5,5,5,5,3,5,2,5,1,5,2,5,0,5,0,5,3,5,5,5,5},
 				  {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
+
+//Entrée random
+CASE T_random[11][21]={{5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5},
+				  {5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
+				  {5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5},
+				  {5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5},
+				  {5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5},
+				  {3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3},
+				  {5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5},
+				  {5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5},
+				  {5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5},
+				  {5,5,5,5,3,5,0,5,0,5,0,5,0,5,0,5,3,5,5,5,5},
+				  {5,5,5,5,5,3,5,3,5,3,5,3,5,3,5,3,5,5,5,5,5}};
 						    
-void copy_tab(CASE T[11][21], CASE T_variant[11][21])
-{
-	int l,c;
-	for (l=0;l<11;l++)
-	{
-		for (c=0;c<21;c++)
-		{
-			T[l][c]=T_variant[l][c];
-		}
-	}
-}
-	
-void init_tab(START_POSITION _pos)
-{
-	switch (pos)
-	{
-		case standard: copy_tab(T,T_standard);
-						 break;
-		case daisy: copy_tab(T,T_daisy);
-						 break;
-		case domination: copy_tab(T,T_domination);
-						 break;
-		case face_to_face: copy_tab(T,T_face_to_face);
-						 break;
-		case snake: copy_tab(T,T_snake);
-						 break;
-		case alliance: copy_tab(T,T_alliance);
-						 break;
-		case labyrinth: copy_tab(T,T_labyrinth);
-						 break;
-		case random: copy_tab(T,T_random);
-						 break;
-		default: break;			 
-	}
-}
-	
+
